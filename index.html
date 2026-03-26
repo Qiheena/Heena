@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Thumbnail Downloader Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #ff0000;
+            --secondary: #282828;
+            --accent: #03a9f4;
+            --success: #4caf50;
+            --danger: #f44336;
+            --light-bg: #f9f9f9;
+            --dark-bg: #0f0f0f;
+            --border: #e0e0e0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding-bottom: 30px;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+        }
+        
+        header {
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: white;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+        
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        body.dark-mode .card {
+            background: #1e1e1e;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        body.dark-mode label {
+            color: #fff;
+        }
+        
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Segoe UI', sans-serif;
+            resize: vertical;
+            transition: all 0.3s;
+        }
+        
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 8px rgba(3, 169, 244, 0.3);
+        }
+        
+        body.dark-mode textarea,
+        body.dark-mode input[type="text"] {
+            background: #2a2a2a;
+            color: #fff;
+            border-color: #444;
+        }
+        
+        textarea {
+            min-height: 120px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .checkbox-wrapper, .radio-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        input[type="checkbox"], input[type="radio"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+        
+        button {
+            padding: 11px 22px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary), #ff4444);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #0288d1;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) inset;
+        }
+        
+        body.dark-mode .progress-bar {
+            background: #333;
+        }
+        
+        .progress-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .progress-text {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+        }
+        
+        body.dark-mode .progress-text {
+            color: #aaa;
+        }
+        
+        .thumb-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .thumb-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+        
+        body.dark-mode .thumb-card {
+            background: #2a2a2a;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+        
+        .thumb-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .thumb-image-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+        
+        body.dark-mode .thumb-image-container {
+            background: #333;
+        }
+        
+        .thumb-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .quality-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .thumb-content {
+            padding: 12px;
+        }
+        
+        .thumb-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        body.dark-mode .thumb-title {
+            color: #fff;
+        }
+        
+        .thumb-video-id {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 10px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        body.dark-mode .thumb-video-id {
+            color: #666;
+        }
+        
+        .thumb-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .quality-select {
+            padding: 6px 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        body.dark-mode .quality-select {
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+        
+        .thumb-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+        
+        .skeleton {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        body.dark-mode .skeleton {
+            background: linear-gradient(90deg, #333 25%, #444 50%, #333 75%);
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert.show {
+            display: flex;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        body.dark-mode .alert {
+            border: none;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            color: var(--accent);
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            width: 120px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .settings-panel {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        body.dark-mode .settings-panel {
+            background: #2a2a2a;
+        }
+        
+        .settings-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        body.dark-mode .settings-title {
+            color: #fff;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        body.dark-mode .empty-state {
+            color: #666;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transition: all 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        body.dark-mode .theme-toggle {
+            background: #333;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 24px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .thumb-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">🌙</button>
+    
+    <header>
+        <h1>🎬 YouTube Thumbnail Downloader Pro</h1>
+        <p>Download high-quality YouTube thumbnails in one click</p>
+    </header>
+    
+    <div class="container">
+        <div id="alertBox"></div>
+        
+        <div class="card">
+            <div class="form-group">
+                <label for="links">📎 Paste YouTube Links</label>
+                <textarea id="links" placeholder="Paste YouTube links here... (supports multiple URLs, one per line or space-separated)&#10;Example: https://www.youtube.com/watch?v=dQw4w9WgXcQ"></textarea>
+            </div>
+            
+            <div class="settings-panel">
+                <div class="settings-title">⚙️ Settings</div>
+                
+                <div class="control-group">
+                    <div class="radio-wrapper">
+                        <label>Quality Selection:</label>
+                        <select id="globalQuality" class="quality-select">
+                            <option value="maxresdefault">Maximum (4K)</option>
+                            <option value="sddefault">High (480p)</option>
+                            <option value="hqdefault" selected>Standard HD (360p)</option>
+                            <option value="mqdefault">Medium (320p)</option>
+                            <option value="default">Low (120p)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="control-group" style="margin-top: 10px;">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="fallbackQuality" checked>
+                        <label for="fallbackQuality">Auto-fallback to lower quality if unavailable</label>
+                    </div>
+                </div>
+                
+                <div class="control-group" style="margin-top: 10px;">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="autoRename" checked>
+                        <label for="autoRename">Auto-rename files with video title</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-panel">
+                <div class="settings-title">📥 Download Mode</div>
+                <div class="control-group">
+                    <div class="radio-wrapper">
+                        <input type="radio" id="modeIndividual" name="downloadMode" value="individual" checked>
+                        <label for="modeIndividual">Individual downloads (one by one)</label>
+                    </div>
+                    <div class="radio-wrapper">
+                        <input type="radio" id="modeZip" name="downloadMode" value="zip">
+                        <label for="modeZip">Download as ZIP archive</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn-primary" onclick="processThumbnails()">🔍 Get Thumbnails</button>
+                <button class="btn-secondary" onclick="clearAll()">🗑️ Clear</button>
+            </div>
+        </div>
+        
+        <div class="card" id="selectionCard" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <span id="selectionInfo">0 thumbnails selected</span>
+                <div class="controls" style="margin: 0;">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        <label for="selectAll">Select All</label>
+                    </div>
+                    <button class="btn-success" onclick="downloadSelected()" id="downloadBtn">⬇️ Download Selected</button>
+                </div>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-bar-inner" id="progressBar">0%</div>
+                </div>
+                <div class="progress-text" id="progressText">Processing... 0/0</div>
+            </div>
+        </div>
+        
+        <div id="output" class="thumb-grid"></div>
+        
+        <div class="card" id="historyCard" style="display: none;">
+            <div class="settings-title">📜 Download History</div>
+            <div id="historyList"></div>
+        </div>
+    </div>
+    
+    <footer>
+        Made with ❤️ | YouTube Thumbnail Downloader Pro v2.0
+    </footer>
+    
+    <script>
+        let downloadHistory = [];
+        let thumbnailsData = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadThemePreference();
+            loadDownloadHistory();
+        });
+        
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            updateThemeToggle();
+        }
+        
+        function updateThemeToggle() {
+            const isDark = document.body.classList.contains('dark-mode');
+            const toggle = document.querySelector('.theme-toggle');
+            if (toggle) toggle.textContent = isDark ? '☀️' : '🌙';
+        }
+        
+        function loadThemePreference() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                updateThemeToggle();
+            }
+        }
+        
+        function showAlert(message, type = 'info', duration = 4000) {
+            const alertBox = document.getElementById('alertBox');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} show`;
+            alert.innerHTML = `<span>${message}</span>`;
+            alertBox.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, duration);
+        }
+        
+        function getVideoId(url) {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s?]+)/,
+                /youtube\.com\/embed\/([^?&]+)/,
+                /youtube\.com\/v\/([^?&]+)/
+            ];
+            
+            for (let pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) return match[1];
+            }
+            return null;
+        }
+        
+        async function getVideoTitle(videoId) {
+            try {
+                const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+                const data = await response.json();
+                if (data.title) {
+                    return data.title;
+                }
+            } catch (e) {
+                console.log('Could not fetch title for', videoId);
+            }
+            return `Video_${videoId}`;
+        }
+        
+        async function processThumbnails() {
+            const input = document.getElementById("links").value;
+            const links = input.match(/https?:\/\/[^\s]+/g) || [];
+            
+            if (links.length === 0) {
+                showAlert('❌ No valid YouTube links found!', 'error');
+                return;
+            }
+            
+            const output = document.getElementById("output");
+            output.innerHTML = '';
+            
+            // Show loading skeletons
+            for (let i = 0; i < links.length; i++) {
+                const skeleton = document.createElement("div");
+                skeleton.className = "thumb-card";
+                skeleton.innerHTML = `
+                    <div class="thumb-image-container">
+                        <div class="skeleton" style="width: 100%; height: 100%;"></div>
+                    </div>
+                    <div class="thumb-content">
+                        <div class="skeleton" style="height: 16px; width: 80%; margin-bottom: 8px;"></div>
+                        <div class="skeleton" style="height: 12px; width: 60%;"></div>
+                    </div>
+                `;
+                output.appendChild(skeleton);
+            }
+            
+            // Process each link
+            thumbnailsData = [];
+            for (let i = 0; i < links.length; i++) {
+                const videoId = getVideoId(links[i]);
+                if (!videoId) continue;
+                
+                const title = await getVideoTitle(videoId);
+                
+                thumbnailsData.push({
+                    id: videoId,
+                    title: title,
+                    link: links[i]
+                });
+            }
+            
+            // Render thumbnails
+            output.innerHTML = '';
+            thumbnailsData.forEach((thumb) => {
+                renderThumbnail(thumb, output);
+            });
+            
+            if (thumbnailsData.length > 0) {
+                document.getElementById('selectionCard').style.display = 'block';
+                showAlert(`✅ Loaded ${thumbnailsData.length} thumbnail(s)`, 'success');
+            } else {
+                showAlert('❌ No valid video IDs found', 'error');
+            }
+        }
+        
+        function getThumbnailUrl(videoId, quality) {
+            return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
+        }
+        
+        async function getAvailableQuality(videoId, requestedQuality, fallbackEnabled) {
+            if (!fallbackEnabled) return requestedQuality;
+            
+            const qualities = ['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault', 'default'];
+            const startIndex = qualities.indexOf(requestedQuality);
+            
+            for (let i = startIndex; i < qualities.length; i++) {
+                const url = getThumbnailUrl(videoId, qualities[i]);
+                try {
+                    const response = await fetch(url, { method: 'HEAD' });
+                    if (response.ok) {
+                        return qualities[i];
+                    }
+                } catch (e) {
+                    continue;
+                }
+            }
+            return 'default';
+        }
+        
+        function renderThumbnail(thumb, container) {
+            const globalQuality = document.getElementById('globalQuality').value;
+            const thumbUrl = getThumbnailUrl(thumb.id, globalQuality);
+            
+            const card = document.createElement("div");
+            card.className = "thumb-card";
+            card.setAttribute('data-id', thumb.id);
+            card.innerHTML = `
+                <div class="thumb-image-container">
+                    <img class="thumb-image" src="${thumbUrl}" alt="${escapeHtml(thumb.title)}" 
+                         onerror="this.src='${getThumbnailUrl(thumb.id, 'hqdefault')}'">
+                    <div class="quality-badge">${globalQuality === 'maxresdefault' ? '4K' : globalQuality === 'sddefault' ? '480p' : 'HD'}</div>
+                </div>
+                <div class="thumb-content">
+                    <div class="thumb-title">${escapeHtml(thumb.title)}</div>
+                    <div class="thumb-video-id">${thumb.id}</div>
+                    <div class="thumb-actions">
+                        <select class="quality-select individual-quality" data-id="${thumb.id}" onchange="updateIndividualQuality(this, '${thumb.id}')">
+                            <option value="maxresdefault">4K</option>
+                            <option value="sddefault">480p</option>
+                            <option value="hqdefault" ${globalQuality === 'hqdefault' ? 'selected' : ''}>360p</option>
+                            <option value="mqdefault">320p</option>
+                            <option value="default">120p</option>
+                        </select>
+                        <input type="checkbox" class="thumb-checkbox" data-id="${thumb.id}" data-title="${escapeHtml(thumb.title)}" onchange="updateSelectionInfo()">
+                    </div>
+                    <button class="btn-secondary" style="width: 100%; padding: 8px; margin-top: 8px;" onclick="downloadSingleThumbnail('${thumb.id}', '${escapeHtml(thumb.title).replace(/'/g, "\\'")}')">⬇️ Quick Download</button>
+                </div>
+            `;
+            
+            container.appendChild(card);
+        }
+        
+        function updateIndividualQuality(select, videoId) {
+            const quality = select.value;
+            const card = select.closest('.thumb-card');
+            const img = card.querySelector('.thumb-image');
+            const newUrl = getThumbnailUrl(videoId, quality);
+            img.src = newUrl;
+            
+            const badge = card.querySelector('.quality-badge');
+            badge.textContent = quality === 'maxresdefault' ? '4K' : quality === 'sddefault' ? '480p' : quality === 'hqdefault' ? '360p' : quality === 'mqdefault' ? '320p' : '120p';
+            
+            img.onerror = function() {
+                img.src = getThumbnailUrl(videoId, 'hqdefault');
+                badge.textContent = 'HD';
+            };
+        }
+        
+        function updateSelectionInfo() {
+            const selected = document.querySelectorAll('.thumb-checkbox:checked').length;
+            const total = document.querySelectorAll('.thumb-checkbox').length;
+            const info = document.getElementById('selectionInfo');
+            info.textContent = `${selected}/${total} thumbnail(s) selected`;
+            
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = selected === total && total > 0;
+            }
+        }
+        
+        function toggleSelectAll() {
+            const checked = document.getElementById('selectAll').checked;
+            document.querySelectorAll('.thumb-checkbox').forEach(cb => cb.checked = checked);
+            updateSelectionInfo();
+        }
+        
+        async function downloadSingleThumbnail(videoId, title) {
+            const qualitySelect = document.querySelector(`.individual-quality[data-id="${videoId}"]`);
+            const quality = qualitySelect ? qualitySelect.value : document.getElementById('globalQuality').value;
+            const fallbackEnabled = document.getElementById('fallbackQuality').checked;
+            
+            const finalQuality = await getAvailableQuality(videoId, quality, fallbackEnabled);
+            const url = getThumbnailUrl(videoId, finalQuality);
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to download');
+                
+                const blob = await response.blob();
+                const autoRename = document.getElementById('autoRename').checked;
+                const filename = autoRename 
+                    ? `${sanitizeFilename(title)}_${videoId}.jpg`
+                    : `thumbnail_${videoId}.jpg`;
+                
+                saveAs(blob, filename);
+                addToHistory(title, filename);
+                showAlert(`✅ Downloaded: ${filename}`, 'success');
+            } catch (e) {
+                showAlert(`❌ Download failed for ${title}`, 'error');
+                console.error(e);
+            }
+        }
+        
+        async function downloadSelected() {
+            const selected = Array.from(document.querySelectorAll('.thumb-checkbox:checked'));
+            
+            if (selected.length === 0) {
+                showAlert('❌ Please select at least one thumbnail!', 'error');
+                return;
+            }
+            
+            const mode = document.querySelector('input[name="downloadMode"]:checked').value;
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            progressContainer.style.display = 'block';
+            
+            if (mode === 'individual') {
+                await downloadIndividual(selected, progressBar, progressText);
+            } else {
+                await downloadAsZip(selected, progressBar, progressText);
+            }
+            
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+            }, 1500);
+        }
+        
+        async function downloadIndividual(selected, progressBar, progressText) {
+            const fallbackEnabled = document.getElementById('fallbackQuality').checked;
+            const autoRename = document.getElementById('autoRename').checked;
+            let completed = 0;
+            const total = selected.length;
+            
+            for (const checkbox of selected) {
+                const videoId = checkbox.getAttribute('data-id');
+                const title = checkbox.getAttribute('data-title');
+                const qualitySelect = document.querySelector(`.individual-quality[data-id="${videoId}"]`);
+                const quality = qualitySelect ? qualitySelect.value : document.getElementById('globalQuality').value;
+                
+                const finalQuality = await getAvailableQuality(videoId, quality, fallbackEnabled);
+                const url = getThumbnailUrl(videoId, finalQuality);
+                
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const filename = autoRename 
+                            ? `${sanitizeFilename(title)}_${videoId}.jpg`
+                            : `thumbnail_${videoId}.jpg`;
+                        
+                        saveAs(blob, filename);
+                        addToHistory(title, filename);
+                    }
+                } catch (e) {
+                    console.error('Download failed for', videoId);
+                }
+                
+                completed++;
+                const percent = Math.round((completed / total) * 100);
+                progressBar.style.width = percent + '%';
+                progressBar.textContent = percent + '%';
+                progressText.textContent = `Downloaded ${completed} of ${total}`;
+            }
+            
+            showAlert(`✅ Downloaded ${completed} thumbnail(s)`, 'success');
+        }
+        
+        async function downloadAsZip(selected, progressBar, progressText) {
+            const zip = new JSZip();
+            const fallbackEnabled = document.getElementById('fallbackQuality').checked;
+            const autoRename = document.getElementById('autoRename').checked;
+            let completed = 0;
+            const total = selected.length;
+            
+            for (const checkbox of selected) {
+                const videoId = checkbox.getAttribute('data-id');
+                const title = checkbox.getAttribute('data-title');
+                const qualitySelect = document.querySelector(`.individual-quality[data-id="${videoId}"]`);
+                const quality = qualitySelect ? qualitySelect.value : document.getElementById('globalQuality').value;
+                
+                const finalQuality = await getAvailableQuality(videoId, quality, fallbackEnabled);
+                const url = getThumbnailUrl(videoId, finalQuality);
+                
+                try {
+                    const response = await fetch(url);
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const filename = autoRename 
+                            ? `${sanitizeFilename(title)}_${videoId}.jpg`
+                            : `thumbnail_${videoId}.jpg`;
+                        
+                        zip.file(filename, blob);
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch', videoId);
+                }
+                
+                completed++;
+                const percent = Math.round((completed / total) * 100);
+                progressBar.style.width = percent + '%';
+                progressBar.textContent = percent + '%';
+                progressText.textContent = `Preparing ${completed} of ${total}`;
+            }
+            
+            try {
+                const content = await zip.generateAsync({ type: 'blob' });
+                saveAs(content, 'YouTube_Thumbnails.zip');
+                showAlert(`✅ ZIP file created with ${total} thumbnail(s)`, 'success');
+                addToHistory('ZIP Archive', 'YouTube_Thumbnails.zip');
+            } catch (e) {
+                showAlert(`❌ Failed to create ZIP file`, 'error');
+                console.error(e);
+            }
+        }
+        
+        function addToHistory(title, filename) {
+            const entry = {
+                title: title,
+                filename: filename,
+                date: new Date().toLocaleString()
+            };
+            
+            downloadHistory.unshift(entry);
+            if (downloadHistory.length > 10) {
+                downloadHistory.pop();
+            }
+            
+            localStorage.setItem('downloadHistory', JSON.stringify(downloadHistory));
+            updateHistoryDisplay();
+        }
+        
+        function updateHistoryDisplay() {
+            const historyCard = document.getElementById('historyCard');
+            if (downloadHistory.length === 0) {
+                historyCard.style.display = 'none';
+                return;
+            }
+            
+            historyCard.style.display = 'block';
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            
+            downloadHistory.forEach(entry => {
+                const item = document.createElement('div');
+                item.style.cssText = 'padding: 8px; border-bottom: 1px solid #eee; font-size: 13px;';
+                item.innerHTML = `
+                    <strong>${escapeHtml(entry.filename)}</strong> 
+                    <br>
+                    <small>From: ${escapeHtml(entry.title)} | ${entry.date}</small>
+                `;
+                historyList.appendChild(item);
+            });
+        }
+        
+        function loadDownloadHistory() {
+            const saved = localStorage.getItem('downloadHistory');
+            if (saved) {
+                try {
+                    downloadHistory = JSON.parse(saved);
+                    updateHistoryDisplay();
+                } catch (e) {
+                    console.error('Failed to load history');
+                }
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function sanitizeFilename(filename) {
+            return filename.replace(/[^a-z0-9\u0900-\u097F\u0980-\u09FF\u0A00-\u0A7F]/gi, '_').substring(0, 50);
+        }
+        
+        function clearAll() {
+            document.getElementById('links').value = '';
+            document.getElementById('output').innerHTML = '';
+            document.getElementById('selectionCard').style.display = 'none';
+            thumbnailsData = [];
+            showAlert('🗑️ Cleared all inputs', 'info');
+        }
+    </script>
+</body>
+  </html>
