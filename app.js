@@ -1,9 +1,18 @@
 let downloadHistory = [];
 let thumbnailsData = [];
 
+const QUALITY_LABELS = {
+    maxresdefault: '1080p+',
+    sddefault: '480p',
+    hqdefault: '360p',
+    mqdefault: '320p',
+    default: '120p'
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     loadTheme();
     loadDownloadHistory();
+    loadWelcomeState();
 });
 
 /* =====================
@@ -11,16 +20,38 @@ document.addEventListener('DOMContentLoaded', () => {
    ===================== */
 function loadTheme() {
     const saved = localStorage.getItem('theme') || 'dark';
-    const isDark = saved === 'dark';
+    applyTheme(saved === 'dark');
+}
+
+function applyTheme(isDark) {
     document.body.className = isDark ? 'dark' : 'light';
     const toggle = document.getElementById('themeToggle');
     if (toggle) toggle.checked = isDark;
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
 }
 
 function toggleTheme() {
     const isDark = document.getElementById('themeToggle').checked;
-    document.body.className = isDark ? 'dark' : 'light';
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    applyTheme(isDark);
+}
+
+/* =====================
+   WELCOME BANNER
+   ===================== */
+function loadWelcomeState() {
+    const dismissed = localStorage.getItem('welcomeDismissed');
+    const banner = document.getElementById('welcomeBanner');
+    if (dismissed && banner) banner.style.display = 'none';
+}
+
+function dismissWelcome() {
+    const banner = document.getElementById('welcomeBanner');
+    if (banner) {
+        banner.style.opacity = '0';
+        banner.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => banner.style.display = 'none', 300);
+    }
+    localStorage.setItem('welcomeDismissed', '1');
 }
 
 /* =====================
@@ -47,11 +78,15 @@ function showAlert(message, type = 'info', duration = 3500) {
     el.className = `alert alert-${type}`;
     el.textContent = message;
     box.appendChild(el);
-    setTimeout(() => el.remove(), duration);
+    setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.3s';
+        setTimeout(() => el.remove(), 300);
+    }, duration);
 }
 
 /* =====================
-   VIDEO ID PARSING
+   VIDEO ID + TITLE
    ===================== */
 function getVideoId(url) {
     const patterns = [
@@ -77,7 +112,7 @@ async function getVideoTitle(videoId) {
 }
 
 /* =====================
-   THUMBNAIL URL
+   THUMBNAIL URL & QUALITY
    ===================== */
 function thumbUrl(videoId, quality) {
     return `https://img.youtube.com/vi/${videoId}/${quality}.jpg`;
@@ -86,7 +121,7 @@ function thumbUrl(videoId, quality) {
 async function bestQuality(videoId, requested, fallback) {
     if (!fallback) return requested;
     const list = ['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault', 'default'];
-    const start = list.indexOf(requested);
+    const start = Math.max(0, list.indexOf(requested));
     for (let i = start; i < list.length; i++) {
         try {
             const r = await fetch(thumbUrl(videoId, list[i]), { method: 'HEAD' });
@@ -97,15 +132,15 @@ async function bestQuality(videoId, requested, fallback) {
 }
 
 function qualityLabel(q) {
-    return { maxresdefault: '4K', sddefault: '480p', hqdefault: '360p', mqdefault: '320p', default: '120p' }[q] || q;
+    return QUALITY_LABELS[q] || q;
 }
 
 /* =====================
-   PROCESS THUMBNAILS
+   PROCESS & RENDER
    ===================== */
 async function processThumbnails() {
     const input = document.getElementById('links').value;
-    const links = (input.match(/https?:\/\/[^\s]+/g) || []);
+    const links = input.match(/https?:\/\/[^\s]+/g) || [];
 
     if (!links.length) {
         showAlert('No valid YouTube links found!', 'error');
@@ -118,13 +153,10 @@ async function processThumbnails() {
 
     const btn = document.getElementById('fetchBtn');
     btn.disabled = true;
+    btn.textContent = 'Fetching...';
 
-    // Show skeletons
-    for (let i = 0; i < links.length; i++) {
-        output.appendChild(makeSkeleton());
-    }
+    links.forEach(() => output.appendChild(makeSkeleton()));
 
-    // Fetch data
     const items = [];
     for (const link of links) {
         const id = getVideoId(link);
@@ -139,6 +171,7 @@ async function processThumbnails() {
     if (!items.length) {
         showAlert('No valid video IDs found.', 'error');
         btn.disabled = false;
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Fetch Thumbnails`;
         return;
     }
 
@@ -147,12 +180,11 @@ async function processThumbnails() {
     document.getElementById('bulkBar').style.display = 'flex';
     updateSelectionInfo();
     showAlert(`Loaded ${items.length} thumbnail${items.length > 1 ? 's' : ''}`, 'success');
+
     btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Fetch Thumbnails`;
 }
 
-/* =====================
-   RENDER CARD
-   ===================== */
 function renderThumb(thumb, container) {
     const gq = document.getElementById('globalQuality').value;
     const url = thumbUrl(thumb.id, gq);
@@ -167,8 +199,10 @@ function renderThumb(thumb, container) {
                  onerror="this.src='${thumbUrl(thumb.id, 'hqdefault')}'">
             <div class="quality-badge" id="badge-${thumb.id}">${qualityLabel(gq)}</div>
             <div class="thumb-select-wrap">
-                <input type="checkbox" class="thumb-checkbox" data-id="${thumb.id}"
-                       data-title="${escapeHtml(thumb.title)}" onchange="updateSelectionInfo()">
+                <input type="checkbox" class="thumb-checkbox"
+                    data-id="${thumb.id}"
+                    data-title="${escapeHtml(thumb.title)}"
+                    onchange="updateSelectionInfo()">
             </div>
         </div>
         <div class="thumb-body">
@@ -177,14 +211,15 @@ function renderThumb(thumb, container) {
             <div class="thumb-quality-row">
                 <select class="thumb-quality-select ind-quality" data-id="${thumb.id}"
                         onchange="changeIndividualQuality(this,'${thumb.id}')">
-                    <option value="maxresdefault">4K</option>
-                    <option value="sddefault">480p</option>
-                    <option value="hqdefault" ${gq === 'hqdefault' ? 'selected' : ''}>360p</option>
-                    <option value="mqdefault">320p</option>
-                    <option value="default">120p</option>
+                    <option value="maxresdefault" ${gq === 'maxresdefault' ? 'selected' : ''}>Max HD (1080p+)</option>
+                    <option value="sddefault"     ${gq === 'sddefault'     ? 'selected' : ''}>High (480p)</option>
+                    <option value="hqdefault"     ${gq === 'hqdefault'     ? 'selected' : ''}>Standard (360p)</option>
+                    <option value="mqdefault"     ${gq === 'mqdefault'     ? 'selected' : ''}>Medium (320p)</option>
+                    <option value="default"       ${gq === 'default'       ? 'selected' : ''}>Low (120p)</option>
                 </select>
             </div>
-            <button class="btn-download" onclick="downloadSingle('${thumb.id}','${escapeHtml(thumb.title).replace(/'/g,"\\'")}')">
+            <button class="btn-download"
+                onclick="downloadSingle('${thumb.id}','${escapeHtml(thumb.title).replace(/'/g,"\\'")}')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>
@@ -194,29 +229,29 @@ function renderThumb(thumb, container) {
             </button>
         </div>
     `;
-
     container.appendChild(card);
 }
 
 function changeIndividualQuality(select, videoId) {
     const q = select.value;
     const card = select.closest('.thumb-card');
-    card.querySelector('.thumb-img').src = thumbUrl(videoId, q);
+    const img = card.querySelector('.thumb-img');
+    img.src = thumbUrl(videoId, q);
+    img.onerror = () => { img.src = thumbUrl(videoId, 'hqdefault'); };
     const badge = document.getElementById(`badge-${videoId}`);
     if (badge) badge.textContent = qualityLabel(q);
 }
 
-/* =====================
-   SKELETON
-   ===================== */
 function makeSkeleton() {
     const div = document.createElement('div');
     div.className = 'thumb-card';
     div.innerHTML = `
-        <div class="thumb-img-wrap"><div class="skeleton" style="position:absolute;inset:0"></div></div>
+        <div class="thumb-img-wrap">
+            <div class="skeleton" style="position:absolute;inset:0"></div>
+        </div>
         <div class="thumb-body">
-            <div class="skeleton" style="height:14px;width:80%;margin-bottom:8px"></div>
-            <div class="skeleton" style="height:11px;width:50%"></div>
+            <div class="skeleton" style="height:13px;width:80%;margin-bottom:8px"></div>
+            <div class="skeleton" style="height:10px;width:50%"></div>
         </div>`;
     return div;
 }
@@ -229,7 +264,7 @@ function updateSelectionInfo() {
     const sel = document.querySelectorAll('.thumb-checkbox:checked');
     document.getElementById('selectionInfo').textContent = `${sel.length} of ${all.length} selected`;
     const sa = document.getElementById('selectAll');
-    if (sa) sa.checked = sel.length === all.length && all.length > 0;
+    if (sa) sa.checked = all.length > 0 && sel.length === all.length;
 }
 
 function toggleSelectAll() {
@@ -252,12 +287,10 @@ async function downloadSingle(videoId, title) {
         const res = await fetch(thumbUrl(videoId, fq));
         if (!res.ok) throw new Error();
         const blob = await res.blob();
-        const filename = autoRename
-            ? `${sanitize(title)}_${videoId}.jpg`
-            : `thumbnail_${videoId}.jpg`;
-        saveAs(blob, filename);
-        addToHistory(title, filename);
-        showAlert(`Downloaded: ${filename}`, 'success');
+        const fn = autoRename ? `${sanitize(title)}_${videoId}.jpg` : `thumbnail_${videoId}.jpg`;
+        saveAs(blob, fn);
+        addToHistory(title, fn);
+        showAlert(`Downloaded: ${fn}`, 'success');
     } catch (_) {
         showAlert(`Download failed for "${title}"`, 'error');
     }
@@ -266,16 +299,9 @@ async function downloadSingle(videoId, title) {
 async function downloadSelected() {
     const selected = Array.from(document.querySelectorAll('.thumb-checkbox:checked'));
     if (!selected.length) { showAlert('Select at least one thumbnail!', 'error'); return; }
-
     const mode = document.querySelector('input[name="downloadMode"]:checked').value;
     showProgress(0, selected.length);
-
-    if (mode === 'zip') {
-        await doZip(selected);
-    } else {
-        await doIndividual(selected);
-    }
-
+    if (mode === 'zip') { await doZip(selected); } else { await doIndividual(selected); }
     hideProgress();
 }
 
@@ -283,14 +309,12 @@ async function doIndividual(items) {
     const fallback = document.getElementById('fallbackQuality').checked;
     const autoRename = document.getElementById('autoRename').checked;
     let done = 0;
-
     for (const cb of items) {
         const id = cb.getAttribute('data-id');
         const title = cb.getAttribute('data-title');
         const qs = document.querySelector(`.ind-quality[data-id="${id}"]`);
         const q = qs ? qs.value : document.getElementById('globalQuality').value;
         const fq = await bestQuality(id, q, fallback);
-
         try {
             const res = await fetch(thumbUrl(id, fq));
             if (res.ok) {
@@ -300,7 +324,6 @@ async function doIndividual(items) {
                 addToHistory(title, fn);
             }
         } catch (_) {}
-
         done++;
         showProgress(done, items.length);
     }
@@ -312,14 +335,12 @@ async function doZip(items) {
     const fallback = document.getElementById('fallbackQuality').checked;
     const autoRename = document.getElementById('autoRename').checked;
     let done = 0;
-
     for (const cb of items) {
         const id = cb.getAttribute('data-id');
         const title = cb.getAttribute('data-title');
         const qs = document.querySelector(`.ind-quality[data-id="${id}"]`);
         const q = qs ? qs.value : document.getElementById('globalQuality').value;
         const fq = await bestQuality(id, q, fallback);
-
         try {
             const res = await fetch(thumbUrl(id, fq));
             if (res.ok) {
@@ -328,11 +349,9 @@ async function doZip(items) {
                 zip.file(fn, blob);
             }
         } catch (_) {}
-
         done++;
         showProgress(done, items.length);
     }
-
     try {
         const content = await zip.generateAsync({ type: 'blob' });
         saveAs(content, 'YouTube_Thumbnails.zip');
@@ -347,8 +366,7 @@ async function doZip(items) {
    PROGRESS
    ===================== */
 function showProgress(done, total) {
-    const wrap = document.getElementById('progressWrap');
-    wrap.style.display = 'block';
+    document.getElementById('progressWrap').style.display = 'block';
     const pct = total ? Math.round((done / total) * 100) : 0;
     document.getElementById('progressFill').style.width = pct + '%';
     document.getElementById('progressLabel').textContent = `${done} of ${total} done`;
@@ -356,8 +374,7 @@ function showProgress(done, total) {
 
 function hideProgress() {
     setTimeout(() => {
-        const wrap = document.getElementById('progressWrap');
-        wrap.style.display = 'none';
+        document.getElementById('progressWrap').style.display = 'none';
         document.getElementById('progressFill').style.width = '0%';
     }, 1200);
 }
@@ -376,11 +393,10 @@ function renderHistory() {
     const card = document.getElementById('historyCard');
     if (!downloadHistory.length) { card.style.display = 'none'; return; }
     card.style.display = 'block';
-    const list = document.getElementById('historyList');
-    list.innerHTML = downloadHistory.map(e => `
+    document.getElementById('historyList').innerHTML = downloadHistory.map(e => `
         <div class="history-item">
             <strong>${escapeHtml(e.filename)}</strong>
-            <small>${escapeHtml(e.title)} · ${e.date}</small>
+            <small>${escapeHtml(e.title)} &nbsp;·&nbsp; ${e.date}</small>
         </div>`).join('');
 }
 
@@ -405,7 +421,7 @@ function clearAll() {
     document.getElementById('output').innerHTML = '';
     document.getElementById('bulkBar').style.display = 'none';
     thumbnailsData = [];
-    showAlert('Cleared', 'info');
+    showAlert('Cleared!', 'info');
 }
 
 /* =====================

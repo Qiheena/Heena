@@ -11,28 +11,32 @@
 </head>
 <body class="dark">
 
-    <!-- Settings Overlay -->
+    <!-- Overlay -->
     <div class="overlay" id="overlay" onclick="closeSettings()"></div>
 
     <!-- Settings Drawer -->
     <aside class="settings-drawer" id="settingsDrawer">
         <div class="drawer-header">
-            <span class="drawer-title">Settings</span>
+            <span class="drawer-title">&#9881; Settings</span>
             <button class="close-btn" onclick="closeSettings()" aria-label="Close">&#10005;</button>
         </div>
 
         <div class="drawer-body">
+
+            <!-- Quality -->
             <div class="setting-group">
                 <label class="setting-label">Default Quality</label>
                 <select id="globalQuality" class="select-input">
-                    <option value="maxresdefault">Maximum (4K)</option>
+                    <option value="maxresdefault" selected>Max HD (1080p+)</option>
                     <option value="sddefault">High (480p)</option>
-                    <option value="hqdefault" selected>Standard HD (360p)</option>
+                    <option value="hqdefault">Standard (360p)</option>
                     <option value="mqdefault">Medium (320p)</option>
                     <option value="default">Low (120p)</option>
                 </select>
+                <p class="setting-hint">Higher quality may not be available for all videos — auto-fallback recommended.</p>
             </div>
 
+            <!-- Download Mode -->
             <div class="setting-group">
                 <label class="setting-label">Download Mode</label>
                 <div class="radio-group">
@@ -49,6 +53,7 @@
                 </div>
             </div>
 
+            <!-- Toggles -->
             <div class="setting-group">
                 <label class="toggle-row">
                     <span>Auto-fallback Quality</span>
@@ -57,7 +62,7 @@
                         <span class="toggle-track"></span>
                     </div>
                 </label>
-                <p class="setting-hint">Falls back to lower quality if requested size unavailable</p>
+                <p class="setting-hint">Falls back if requested quality is unavailable</p>
             </div>
 
             <div class="setting-group">
@@ -68,7 +73,7 @@
                         <span class="toggle-track"></span>
                     </div>
                 </label>
-                <p class="setting-hint">Uses video title as the filename</p>
+                <p class="setting-hint">Saves file using the video title as filename</p>
             </div>
 
             <div class="setting-group">
@@ -80,30 +85,66 @@
                     </div>
                 </label>
             </div>
+
+            <!-- Contact / Social -->
+            <div class="drawer-divider"></div>
+            <div class="setting-group">
+                <label class="setting-label">Contact &amp; Social</label>
+                <div class="social-links">
+                    <a class="social-item" href="https://www.youtube.com/@RasaVedic" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        @RasaVedic
+                    </a>
+                    <a class="social-item" href="https://github.com/Qiheena/Heena" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                        GitHub
+                    </a>
+                    <a class="social-item" href="mailto:contact@rasavedic.com">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        Email Us
+                    </a>
+                </div>
+            </div>
+
+            <!-- Drawer Footer -->
+            <div class="drawer-divider"></div>
+            <div class="drawer-footer-note">
+                Built with ❤️ by <strong>QIHeena</strong> &amp; <strong>RasaVedic</strong><br>
+                <span>v2.0 &nbsp;·&nbsp; Open Source</span>
+            </div>
+
         </div>
     </aside>
 
     <!-- Header -->
     <header class="header">
         <div class="header-inner">
-            <div class="brand">
+            <a class="brand" href="https://github.com/Qiheena/Heena" target="_blank" rel="noopener" title="View on GitHub">
                 <svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                 </svg>
                 <span class="brand-name">ThumbFetch <span class="brand-pro">Pro</span></span>
-            </div>
-            <button class="menu-btn" id="menuBtn" onclick="openSettings()" aria-label="Open Settings">
-                <span></span>
-                <span></span>
-                <span></span>
+            </a>
+            <button class="menu-btn" onclick="openSettings()" aria-label="Open Settings">
+                <span></span><span></span><span></span>
             </button>
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main -->
     <main class="main">
 
-        <!-- Hero Section -->
+        <!-- Welcome Banner -->
+        <div class="welcome-banner" id="welcomeBanner">
+            <button class="welcome-close" onclick="dismissWelcome()" aria-label="Close">&#10005;</button>
+            <div class="welcome-icon">&#128247;</div>
+            <div class="welcome-text">
+                <strong>Welcome to ThumbFetch Pro!</strong>
+                <p>Paste any YouTube link below to download its thumbnail in high quality. Supports multiple links, bulk download &amp; ZIP export.</p>
+            </div>
+        </div>
+
+        <!-- Hero -->
         <section class="hero">
             <h1 class="hero-title">Download YouTube<br><span class="accent">Thumbnails</span> Instantly</h1>
             <p class="hero-sub">Paste one or multiple YouTube links — get high-quality thumbnails in seconds.</p>
@@ -134,7 +175,7 @@
         <!-- Alert Box -->
         <div id="alertBox" class="alert-box"></div>
 
-        <!-- Progress Bar -->
+        <!-- Progress -->
         <div class="progress-wrap" id="progressWrap" style="display:none">
             <div class="progress-track">
                 <div class="progress-fill" id="progressFill"></div>
@@ -142,7 +183,7 @@
             <p class="progress-label" id="progressLabel">Processing...</p>
         </div>
 
-        <!-- Bulk Actions Bar -->
+        <!-- Bulk Bar -->
         <div class="bulk-bar" id="bulkBar" style="display:none">
             <label class="select-all-label">
                 <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
@@ -158,18 +199,44 @@
         <!-- Thumbnails Grid -->
         <div id="output" class="thumb-grid"></div>
 
-        <!-- History -->
+        <!-- Need Help -->
+        <div class="help-section card">
+            <div class="help-header">
+                <span class="help-icon">&#128161;</span>
+                <strong>How to use &amp; Tips</strong>
+            </div>
+            <ul class="help-list">
+                <li>&#128279; Paste one or more YouTube URLs (one per line or space-separated)</li>
+                <li>&#127775; Use <strong>Max HD (1080p+)</strong> for best quality — falls back automatically</li>
+                <li>&#128230; Select multiple thumbnails and download as a single <strong>ZIP</strong></li>
+                <li>&#9881;&#65039; Open the <strong>menu (&#9776;)</strong> to change quality, mode &amp; theme</li>
+                <li>&#128247; Supports: youtube.com/watch, youtu.be, /shorts, /embed links</li>
+            </ul>
+            <div class="suggestions-box">
+                <span class="suggestions-title">&#128172; Suggestions / Feedback</span>
+                <p>Have a feature request or found a bug? Reach out via
+                    <a href="https://www.youtube.com/@RasaVedic" target="_blank" rel="noopener">@RasaVedic</a>
+                    or open an issue on
+                    <a href="https://github.com/Qiheena/Heena" target="_blank" rel="noopener">GitHub</a>.
+                </p>
+            </div>
+        </div>
+
+        <!-- Download History -->
         <div class="card history-card" id="historyCard" style="display:none">
-            <div class="section-title">Recent Downloads</div>
+            <div class="section-title">&#128221; Recent Downloads</div>
             <div id="historyList" class="history-list"></div>
             <button class="btn btn-ghost btn-sm" onclick="clearHistory()" style="margin-top:12px">Clear History</button>
         </div>
 
     </main>
 
-    <!-- Footer -->
+    <!-- Sticky Footer -->
     <footer class="footer">
-        <p>Built with ❤️ by <strong>QIHeena</strong> &amp; <strong>RasaVedic</strong></p>
+        <p>Built with &#10084;&#65039; by <strong>QIHeena</strong> &amp; <strong>RasaVedic</strong> &nbsp;·&nbsp;
+            <a href="https://github.com/Qiheena/Heena" target="_blank" rel="noopener">GitHub</a> &nbsp;·&nbsp;
+            <a href="https://www.youtube.com/@RasaVedic" target="_blank" rel="noopener">@RasaVedic</a>
+        </p>
     </footer>
 
 </body>
